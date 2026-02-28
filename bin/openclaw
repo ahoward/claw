@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DISPLAY_NUM="${DISPLAY_NUM:-1}"
+export DISPLAY=":${DISPLAY_NUM}"
+
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+CLAW_SRC="${REPO_DIR}/OpenClaw"
+CLAW_REZ="${HOME}/claw/CLAW.REZ"
+
+# ensure desktop is running
+"$(dirname "$0")/start"
+
+# clone if needed
+if [ ! -d "${CLAW_SRC}" ]; then
+  echo "==> cloning OpenClaw..."
+  git clone https://github.com/pjasicek/OpenClaw.git "${CLAW_SRC}"
+fi
+
+# build if needed
+if [ ! -f "${CLAW_SRC}/build/CaptainClaw" ]; then
+  echo "==> building OpenClaw..."
+  cd "${CLAW_SRC}"
+  cmake -B build .
+  cmake --build build -j"$(nproc)"
+fi
+
+# check for CLAW.REZ
+if [ ! -f "${CLAW_REZ}" ]; then
+  echo "ERROR: CLAW.REZ not found at ${CLAW_REZ}"
+  echo "  Place your CLAW.REZ from the original Captain Claw (1997) game there."
+  exit 1
+fi
+
+# link REZ file into build dir if not already there
+BUILD_REZ="${CLAW_SRC}/Build_Release/CLAW.REZ"
+if [ ! -f "${BUILD_REZ}" ]; then
+  mkdir -p "${CLAW_SRC}/Build_Release"
+  ln -sf "${CLAW_REZ}" "${BUILD_REZ}"
+fi
+
+echo "==> launching OpenClaw..."
+cd "${CLAW_SRC}/Build_Release"
+"${CLAW_SRC}/build/CaptainClaw"

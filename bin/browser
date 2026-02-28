@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DISPLAY_NUM="${DISPLAY_NUM:-1}"
+export DISPLAY=":${DISPLAY_NUM}"
+
+# ensure desktop is running
+"$(dirname "$0")/start"
+
+echo "==> launching Chrome..."
+google-chrome \
+  --no-sandbox \
+  --disable-dev-shm-usage \
+  "${@}" &

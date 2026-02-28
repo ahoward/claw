@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "==> stopping x11vnc..."
+pkill -f x11vnc || true
+
+echo "==> stopping openbox..."
+pkill -f openbox || true
+
+echo "==> stopping Xvfb..."
+pkill -f Xvfb || true
+
+echo "==> done"

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "==> installing tailscale..."
+if ! command -v tailscale &>/dev/null; then
+  curl -fsSL https://tailscale.com/install.sh | sh
+else
+  echo "    tailscale already installed"
+fi
+
+echo "==> installing display + VNC tools..."
+sudo apt-get install -y xvfb x11vnc openbox
+
+echo "==> installing OpenClaw build dependencies..."
+sudo apt-get install -y \
+  build-essential cmake git \
+  libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev \
+  libsdl2-ttf-dev libsdl2-gfx-dev \
+  libbox2d-dev libtinyxml-dev \
+  timidity freepats
+
+echo ""
+echo "==> done. next steps:"
+echo "    1. sudo tailscale up   (authenticate tailscale)"
+echo "    2. ./bin/start         (start the virtual desktop)"

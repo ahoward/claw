@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DISPLAY_NUM="${DISPLAY_NUM:-1}"
+DISPLAY=":${DISPLAY_NUM}"
+VNC_PORT="${VNC_PORT:-5900}"
+
+# get tailscale IP — bind VNC only to this interface
+TAILSCALE_IP="$(tailscale ip -4 2>/dev/null || echo '127.0.0.1')"
+
+# start Xvfb if not running
+if ! pgrep -f "Xvfb ${DISPLAY}" &>/dev/null; then
+  echo "==> starting Xvfb on ${DISPLAY}..."
+  Xvfb "${DISPLAY}" -screen 0 1920x1080x24 &
+  sleep 1
+else
+  echo "==> Xvfb already running on ${DISPLAY}"
+fi
+
+# start openbox window manager if not running
+if ! DISPLAY="${DISPLAY}" pgrep -f openbox &>/dev/null; then
+  echo "==> starting openbox..."
+  DISPLAY="${DISPLAY}" openbox &
+  sleep 0.5
+else
+  echo "==> openbox already running"
+fi
+
+# start x11vnc if not running
+if ! pgrep -f "x11vnc.*${DISPLAY}" &>/dev/null; then
+  echo "==> starting x11vnc on ${TAILSCALE_IP}:${VNC_PORT}..."
+  x11vnc \
+    -display "${DISPLAY}" \
+    -rfbport "${VNC_PORT}" \
+    -listen "${TAILSCALE_IP}" \
+    -nopw \
+    -forever \
+    -bg \
+    -o /tmp/x11vnc.log
+else
+  echo "==> x11vnc already running"
+fi
+
+echo ""
+echo "==> desktop is up. connect with:"
+echo ""
+echo "    vnc://${TAILSCALE_IP}:${VNC_PORT}"
+echo ""
+echo "    or from your Mac terminal:"
+echo "    open vnc://${TAILSCALE_IP}:${VNC_PORT}"
